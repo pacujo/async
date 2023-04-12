@@ -41,6 +41,8 @@
 #include "async_imp.h"
 #include "async_version.h"
 
+static void cancel_wakeup(async_t *async);
+
 static int timer_cmp(const void *t1, const void *t2)
 {
     const async_timer_t *timer1 = t1;
@@ -216,7 +218,7 @@ static void set_wakeup_time(async_t *async, int64_t delay)
 {
     struct kevent event;
     EV_SET(&event, 0, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT,
-           NOTE_NSECONDS, delay, NULL):
+           NOTE_NSECONDS, delay, NULL);
     if (kevent(async->poll_fd, &event, 1, NULL, 0, NULL) < 0)
         assert(false);
 }
@@ -234,7 +236,7 @@ static void wake_up(async_t *async)
 {
     FSTRACE(ASYNC_WAKE_UP, async->uid);
 #ifndef __linux__
-    if (async->wakeup_trigger_needed)
+    if (async->wakeup_needed)
         set_wakeup_time(async, 0);
 #elif PIPE_WAKEUP
     if (async->wakeup_trigger_fd >= 0 &&
@@ -256,7 +258,7 @@ static void cancel_wakeup(async_t *async)
 {
 #ifndef __linux__
     struct kevent event;
-    EV_SET(&event, 0, EVFILT_TIMER, EV_DELETE, 0, 0, NULL):
+    EV_SET(&event, 0, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
     (void) kevent(async->poll_fd, &event, 1, NULL, 0, NULL);
 #elif !PIPE_WAKEUP
     static const struct itimerspec never = { 0 };
