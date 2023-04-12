@@ -276,6 +276,7 @@ static uint64_t schedule_wakeup(async_t *async, uint64_t expires)
         int64_t delay = expires - now;
         set_wakeup_time(async, delay >= 0 ? delay : INT64_MAX);
     }    
+    return (uint64_t) -1;
 #elif PIPE_WAKEUP
     return expires;
 #else
@@ -561,6 +562,7 @@ static bool set_up_wakeup(async_t *async)
 {
     FSTRACE(ASYNC_SET_UP_WAKEUP, async->uid);
     async->wakeup_needed = true;
+    return true;
 }
 #elif PIPE_WAKEUP
 
