@@ -861,15 +861,14 @@ int async_loop_protected(async_t *async, void (*lock)(void *),
             return 0;
         }
         FSTRACE(ASYNC_LOOP_PROTECTED_WAIT, async->uid, ns);
+        unlock(lock_data);
 #if USE_EPOLL
         struct epoll_event epoll_events[MAX_IO_BURST];
-        unlock(lock_data);
         int count = epoll_wait(async->poll_fd, epoll_events, MAX_IO_BURST,
                                ns_to_ms(ns));
 #else
         struct kevent kq_events[MAX_IO_BURST];
         struct timespec t;
-        unlock(lock_data);
         int count = kevent(async->poll_fd, NULL, 0, kq_events, MAX_IO_BURST,
                            ns_to_timespec(ns, &t));
 #endif
@@ -887,8 +886,10 @@ int async_loop_protected(async_t *async, void (*lock)(void *),
 #else
             async_event_t *event = kq_events[i].udata;
 #endif
-            async_event_trigger(event);
-            FSTRACE(ASYNC_LOOP_PROTECTED_EXECUTE, async->uid, event->uid);
+            if (event) {        /* the timer "event" is NULL */
+                async_event_trigger(event);
+                FSTRACE(ASYNC_LOOP_PROTECTED_EXECUTE, async->uid, event->uid);
+            }
         }
     }
 }
