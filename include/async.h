@@ -75,7 +75,7 @@ uint64_t async_now(async_t *async);
 
 /*
  * Start a timer that expires at the given absolute time (expressed in
- * epoch nanoseconds).
+ * monotonic nanoseconds).
  */
 async_timer_t *async_timer_start(async_t *async, uint64_t expires,
                                  action_1 action);
